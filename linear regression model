@@ -1,0 +1,237 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyOy5qXxV18uLh7UQylTLbh8",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/dheerajprabhu18/Linear_regression-from-scratch/blob/main/linear%20regression%20model\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "id": "ePHxligMJWSh"
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "class LinearRegression:\n",
+        "    def __init__(self, lr=0.001, epochs=100, bias=True):\n",
+        "        if lr <= 0:\n",
+        "            raise ValueError(\"Learning rate should be greater than zero\")\n",
+        "        self.lr = lr\n",
+        "        if epochs <= 0:\n",
+        "            raise ValueError(\"Epochs should be greater than zero\")\n",
+        "        self.epochs = epochs\n",
+        "        self.bias = bias\n",
+        "        self.weights = None\n",
+        "\n",
+        "    def _prepare_data(self, X):\n",
+        "        X = np.array(X, dtype=np.float32)\n",
+        "        if X.shape[0] == 0:\n",
+        "            raise ValueError(\"Data cannot be empty\")\n",
+        "\n",
+        "        if len(X.shape) < 2:\n",
+        "            X = X.reshape(-1, 1)\n",
+        "\n",
+        "        if self.bias:\n",
+        "            ones = np.ones((X.shape[0], 1), np.float32)\n",
+        "            X = np.concatenate((ones, X), axis=1)\n",
+        "\n",
+        "        return X\n",
+        "\n",
+        "    def _loss_function(self, labels, prediction):\n",
+        "        return np.mean(np.square(labels - prediction)) / 2\n",
+        "\n",
+        "    def train(self, x, y, batch_size=32):\n",
+        "        X = self._prepare_data(x)\n",
+        "        y = np.array(y, dtype=np.float32)\n",
+        "\n",
+        "        if X.shape[0] != y.shape[0]:\n",
+        "            raise ValueError(\"Samples and labels should have the same length\")\n",
+        "\n",
+        "        num_samples, num_features = X.shape\n",
+        "        self.weights = np.random.randn(num_features, 1).astype(np.float32)\n",
+        "        batches = (num_samples + batch_size - 1) // batch_size\n",
+        "\n",
+        "        # Training the model\n",
+        "        for epoch in range(self.epochs):\n",
+        "            total_loss = 0\n",
+        "            for batch in range(batches):\n",
+        "                i = batch * batch_size\n",
+        "                j = min((batch + 1) * batch_size, num_samples)\n",
+        "                samples = X[i:j]\n",
+        "                labels = y[i:j]\n",
+        "\n",
+        "                h = np.dot(samples, self.weights)\n",
+        "                loss = self._loss_function(labels, h)\n",
+        "                total_loss += loss\n",
+        "\n",
+        "                # Updating weights\n",
+        "                self.weights -= (self.lr / batch_size) * np.dot(samples.T, (h - labels))\n",
+        "\n",
+        "            avg_loss = total_loss / batches\n",
+        "            if epoch % 10 == 0:\n",
+        "                print(f\"Epoch {epoch+1}/{self.epochs}: Training Loss: {avg_loss:.3f}\")\n",
+        "\n",
+        "    def predict(self, X):\n",
+        "        if self.weights is None:\n",
+        "            raise ValueError(\"Model must be trained before making predictions\")\n",
+        "        # Prepare data\n",
+        "        X = self._prepare_data(X)\n",
+        "        # Apply model\n",
+        "        return np.dot(X, self.weights)\n"
+      ],
+      "metadata": {
+        "id": "gU0zrqTpJX5h"
+      },
+      "execution_count": 9,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Sample data (replace with your actual data loading)\n",
+        "X = np.array([[1, 2], [3, 4], [5, 6], [7,8]])\n",
+        "y = np.array([[3], [7], [11], [15]])\n",
+        "\n",
+        "# Initialize and train the model\n",
+        "model = LinearRegression(lr=0.1, epochs=500)\n",
+        "model.train(X, y)\n",
+        "\n",
+        "# Make predictions\n",
+        "predictions = model.predict(X)\n",
+        "print(\"Predictions:\", predictions)\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "g5huAk1ZWuyR",
+        "outputId": "8bfc57c3-69ce-4682-a54c-49493848ecc9"
+      },
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Epoch 1/500: Training Loss: 66.715\n",
+            "Epoch 11/500: Training Loss: 0.005\n",
+            "Epoch 21/500: Training Loss: 0.005\n",
+            "Epoch 31/500: Training Loss: 0.004\n",
+            "Epoch 41/500: Training Loss: 0.004\n",
+            "Epoch 51/500: Training Loss: 0.004\n",
+            "Epoch 61/500: Training Loss: 0.003\n",
+            "Epoch 71/500: Training Loss: 0.003\n",
+            "Epoch 81/500: Training Loss: 0.003\n",
+            "Epoch 91/500: Training Loss: 0.003\n",
+            "Epoch 101/500: Training Loss: 0.003\n",
+            "Epoch 111/500: Training Loss: 0.002\n",
+            "Epoch 121/500: Training Loss: 0.002\n",
+            "Epoch 131/500: Training Loss: 0.002\n",
+            "Epoch 141/500: Training Loss: 0.002\n",
+            "Epoch 151/500: Training Loss: 0.002\n",
+            "Epoch 161/500: Training Loss: 0.002\n",
+            "Epoch 171/500: Training Loss: 0.002\n",
+            "Epoch 181/500: Training Loss: 0.001\n",
+            "Epoch 191/500: Training Loss: 0.001\n",
+            "Epoch 201/500: Training Loss: 0.001\n",
+            "Epoch 211/500: Training Loss: 0.001\n",
+            "Epoch 221/500: Training Loss: 0.001\n",
+            "Epoch 231/500: Training Loss: 0.001\n",
+            "Epoch 241/500: Training Loss: 0.001\n",
+            "Epoch 251/500: Training Loss: 0.001\n",
+            "Epoch 261/500: Training Loss: 0.001\n",
+            "Epoch 271/500: Training Loss: 0.001\n",
+            "Epoch 281/500: Training Loss: 0.001\n",
+            "Epoch 291/500: Training Loss: 0.001\n",
+            "Epoch 301/500: Training Loss: 0.001\n",
+            "Epoch 311/500: Training Loss: 0.001\n",
+            "Epoch 321/500: Training Loss: 0.001\n",
+            "Epoch 331/500: Training Loss: 0.000\n",
+            "Epoch 341/500: Training Loss: 0.000\n",
+            "Epoch 351/500: Training Loss: 0.000\n",
+            "Epoch 361/500: Training Loss: 0.000\n",
+            "Epoch 371/500: Training Loss: 0.000\n",
+            "Epoch 381/500: Training Loss: 0.000\n",
+            "Epoch 391/500: Training Loss: 0.000\n",
+            "Epoch 401/500: Training Loss: 0.000\n",
+            "Epoch 411/500: Training Loss: 0.000\n",
+            "Epoch 421/500: Training Loss: 0.000\n",
+            "Epoch 431/500: Training Loss: 0.000\n",
+            "Epoch 441/500: Training Loss: 0.000\n",
+            "Epoch 451/500: Training Loss: 0.000\n",
+            "Epoch 461/500: Training Loss: 0.000\n",
+            "Epoch 471/500: Training Loss: 0.000\n",
+            "Epoch 481/500: Training Loss: 0.000\n",
+            "Epoch 491/500: Training Loss: 0.000\n",
+            "Predictions: [[ 3.0274541]\n",
+            " [ 7.013993 ]\n",
+            " [11.000532 ]\n",
+            " [14.98707  ]]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "1m920Q61W2fh",
+        "outputId": "22ab937e-ca18-4595-b7a7-7794efbacd5d"
+      },
+      "execution_count": 23,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Predictions: [ 3.  7. 11. 15.]\n",
+            "Coefficients (weights): [1. 1.]\n",
+            "Intercept (bias): 3.552713678800501e-15\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "34a6b4QLZ4Da"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
